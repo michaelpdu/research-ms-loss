@@ -14,7 +14,7 @@ def feat_extractor(model, data_loader, logger=None):
     feats = list()
 
     for i, batch in enumerate(data_loader):
-        imgs = batch[0].cuda()
+        imgs = batch[0].cuda() if torch.cuda.is_available() else batch[0]
 
         with torch.no_grad():
             out = model(imgs).data.cpu().numpy()

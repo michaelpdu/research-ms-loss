@@ -5,6 +5,7 @@
 #
 # This source code is licensed under the LICENSE file in the root directory of this source tree.
 
+import os
 from torch.utils.data import DataLoader
 
 from .collate_batch import collate_fn
@@ -13,10 +14,11 @@ from .samplers import RandomIdentitySampler
 from .transforms import build_transforms
 
 
-def build_data(cfg, is_train=True):
+def build_data(cfg, data_root='data', is_train=True):
     transforms = build_transforms(cfg, is_train=is_train)
     if is_train:
-        dataset = BaseDataSet(cfg.DATA.TRAIN_IMG_SOURCE, transforms=transforms, mode=cfg.INPUT.MODE)
+        dataset = BaseDataSet(os.path.join(data_root, cfg.DATA.TRAIN_IMG_SOURCE),
+                              transforms=transforms, mode=cfg.INPUT.MODE)
         sampler = RandomIdentitySampler(dataset=dataset,
                                         batch_size=cfg.DATA.TRAIN_BATCHSIZE,
                                         num_instances=cfg.DATA.NUM_INSTANCES,
@@ -29,7 +31,8 @@ def build_data(cfg, is_train=True):
                                  pin_memory=True
                                  )
     else:
-        dataset = BaseDataSet(cfg.DATA.TEST_IMG_SOURCE, transforms=transforms, mode=cfg.INPUT.MODE)
+        dataset = BaseDataSet(os.path.join(data_root, cfg.DATA.TEST_IMG_SOURCE),
+                              transforms=transforms, mode=cfg.INPUT.MODE)
         data_loader = DataLoader(dataset,
                                  collate_fn=collate_fn,
                                  shuffle=False,

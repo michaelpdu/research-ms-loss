@@ -18,11 +18,11 @@ from ret_benchmark.utils.logger import setup_logger
 from ret_benchmark.utils.checkpoint import Checkpointer
 
 
-def train(cfg):
+def train(cfg, data_root, epoch):
     logger = setup_logger(name='Train', level=cfg.LOGGER.LEVEL)
     logger.info(cfg)
     model = build_model(cfg)
-    device = torch.device(cfg.MODEL.DEVICE)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
 
     criterion = build_loss(cfg)
@@ -30,8 +30,8 @@ def train(cfg):
     optimizer = build_optimizer(cfg, model)
     scheduler = build_lr_scheduler(cfg, optimizer)
 
-    train_loader = build_data(cfg, is_train=True)
-    val_loader = build_data(cfg, is_train=False)
+    train_loader = build_data(cfg, data_root=data_root, is_train=True)
+    val_loader = build_data(cfg, data_root=data_root, is_train=False)
 
     logger.info(train_loader.dataset)
     logger.info(val_loader.dataset)
@@ -54,7 +54,8 @@ def train(cfg):
         device,
         checkpoint_period,
         arguments,
-        logger
+        logger,
+        epoch
     )
 
 
@@ -63,16 +64,13 @@ def parse_args():
   Parse input arguments
   """
     parser = argparse.ArgumentParser(description='Train a retrieval network')
-    parser.add_argument(
-        '--cfg',
-        dest='cfg_file',
-        help='config file',
-        default=None,
-        type=str)
+    parser.add_argument('--cfg', dest='cfg_file', help='config file', default='configs/example.yaml', type=str)
+    parser.add_argument('--data_root', dest='data_root', help='data root dir', default='data', type=str)
+    parser.add_argument('--epoch', dest='epoch', help='epoch time', default=1, type=int)
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
     cfg.merge_from_file(args.cfg_file)
-    train(cfg)
+    train(cfg, args.data_root, args.epoch)

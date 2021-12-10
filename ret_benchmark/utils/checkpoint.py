@@ -20,6 +20,7 @@ class Checkpointer(object):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.save_dir = save_dir
+        os.makedirs(save_dir, exist_ok=True)
         self.save_to_disk = save_to_disk
         if logger is None:
             logger = logging.getLogger(__name__)

@@ -12,6 +12,7 @@ from ret_benchmark.data.build import build_memory_data
 
 class XBM:
     def __init__(self, cfg, model):
+        self.use_gpu = torch.cuda.is_available()
         self.ratio = cfg.MEMORY.RATIO
         # init memory
         self.feats = list()
@@ -20,10 +21,10 @@ class XBM:
         model.train()
         for images, labels, indices in build_memory_data(cfg):
             with torch.no_grad():
-                feat = model(images.cuda())
+                feat = model(images.cuda() if self.use_gpu else images)
                 self.feats.append(feat)
-                self.labels.append(labels.cuda())
-                self.indices.append(indices.cuda())
+                self.labels.append(labels.cuda() if self.use_gpu else labels)
+                self.indices.append(indices.cuda() if self.use_gpu else indices)
         self.feats = torch.cat(self.feats, dim=0)
         self.labels = torch.cat(self.labels, dim=0)
         self.indices = torch.cat(self.indices, dim=0)
@@ -36,7 +37,7 @@ class XBM:
         self.feats.data[indices] = feats
         if self.ratio != 1.0:
             # enqueue
-            self.queue_mask = torch.cat((self.queue_mask, indices.cuda()), dim=0)
+            self.queue_mask = torch.cat((self.queue_mask, indices.cuda() if self.use_gpu else indices), dim=0)
             # dequeue
             self.queue_mask = self.queue_mask[-int(self.indices.shape[0] * self.ratio):]
 
